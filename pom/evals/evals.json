@@ -1,0 +1,26 @@
+{
+  "skill_name": "pom",
+  "evals": [
+    {
+      "id": 0,
+      "name": "new-pom-java25-payments",
+      "prompt": "Hey - kicking off a new microservice 'payments-orchestrator' (groupId com.acme.payments, Java 25, latest spring boot). Can you generate the pom.xml? It needs spring-boot-starter-web, actuator, validation, and we'll be using lombok and mapstruct. Tests: spring-boot-starter-test plus assertj and wiremock. Drop it in the project root.",
+      "expected_output": "A complete pom.xml at the repo root respecting all skill rules: versions only in <properties>+<dependencyManagement>, plugin versions only in properties, all required plugins present, AOT execution under spring-boot-maven-plugin (Java 25), dependencies grouped 1-5.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "add-resilience4j-dependency",
+      "prompt": "Need to add resilience4j-spring-boot3 to our service. Latest stable. The pom.xml is already in the repo root. Make sure it goes in the right place.",
+      "expected_output": "Adds resilience4j-spring-boot3 to <dependencies> in the third-party runtime group, adds a <resilience4j.version> property, adds a <dependencyManagement> entry referencing the property. No inline <version> in the <dependencies> entry.",
+      "files": ["existing-pom.xml"]
+    },
+    {
+      "id": 2,
+      "name": "configure-spotless-plugin",
+      "prompt": "Our existing pom has no spotless plugin yet — please add it so that running `mvn validate` auto-formats the Java code with google-java-format. pom.xml is at repo root.",
+      "expected_output": "Adds spotless-maven-plugin to <build><plugins>, with version referenced as ${spotless.version} (property added under <properties>), googleJavaFormat config, execution bound to validate phase with goal apply.",
+      "files": ["existing-pom-no-spotless.xml"]
+    }
+  ]
+}

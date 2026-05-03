@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Spring Boot starter pom.xml template.
+
+    Replace every __PLACEHOLDER__ before use.
+    Resolve __SPRING_BOOT_VERSION__, __PEDANTIC_VERSION__, __SPOTLESS_VERSION__,
+    __JACOCO_VERSION__ to the latest stable release at the time of generation
+    (see SKILL.md "Resolving versions").
+
+    If __JAVA_VERSION__ < 25, remove the <executions> block from
+    spring-boot-maven-plugin (the process-aot execution).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>__SPRING_BOOT_VERSION__</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>__GROUP_ID__</groupId>
+    <artifactId>__ARTIFACT_ID__</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>__PROJECT_NAME__</name>
+    <description>__PROJECT_DESCRIPTION__</description>
+
+    <properties>
+        <java.version>__JAVA_VERSION__</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Plugin versions (only for plugins NOT managed by spring-boot-starter-parent) -->
+        <pedantic-pom-enforcers.version>__PEDANTIC_VERSION__</pedantic-pom-enforcers.version>
+        <spotless.version>__SPOTLESS_VERSION__</spotless.version>
+        <jacoco.version>__JACOCO_VERSION__</jacoco.version>
+
+        <!-- Third-party dependency versions go here, e.g.
+        <mapstruct.version>x.y.z</mapstruct.version>
+        -->
+    </properties>
+
+    <!--
+        Add entries ONLY for dependencies not already managed by the
+        spring-boot-starter-parent BOM. Every <version> must reference a property.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <!--
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            -->
+        </dependencies>
+    </dependencyManagement>
+
+    <!--
+        Dependencies are intentionally empty — add the ones the project needs,
+        respecting this group order (blank line between groups):
+          1. Spring dependencies          (org.springframework.*, spring-boot-starter-*)
+          2. Dev-only dependencies        (lombok, spring-boot-devtools,
+                                           spring-boot-configuration-processor) —
+                                           use <optional>true</optional> or
+                                           <scope>provided</scope>
+          3. Third-party runtime          (jackson modules, mapstruct, resilience4j, ...)
+          4. Spring test                  (spring-boot-starter-test, spring-security-test,
+                                           spring-boot-testcontainers, ...) <scope>test</scope>
+          5. Third-party test             (assertj, wiremock, awaitility, ...) <scope>test</scope>
+    -->
+    <dependencies>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.ferstl</groupId>
+                        <artifactId>pedantic-pom-enforcers</artifactId>
+                        <version>${pedantic-pom-enforcers.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>enforce-organisation-rules</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <dependencyConvergence/>
+                                <requireUpperBoundDeps/>
+                                <banDuplicatePomDependencyVersions/>
+                                <banDistributionManagement>
+                                    <allowSite>true</allowSite>
+                                </banDistributionManagement>
+                                <requireSameVersions>
+                                    <dependencies>
+                                        <dependency>${project.groupId}</dependency>
+                                    </dependencies>
+                                </requireSameVersions>
+                                <compound
+                                        implementation="com.github.ferstl.maven.pomenforcers.CompoundPedanticEnforcer">
+                                    <enforcers>DEPENDENCY_CONFIGURATION</enforcers>
+                                    <manageDependencyVersions>true</manageDependencyVersions>
+                                    <allowUnmangedProjectVersions>true</allowUnmangedProjectVersions>
+                                    <manageDependencyExclusions>true</manageDependencyExclusions>
+                                </compound>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>auto-style</id>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Keep <executions> ONLY if java.version >= 25 -->
+                <executions>
+                    <execution>
+                        <id>process-aot</id>
+                        <goals>
+                            <goal>process-aot</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
