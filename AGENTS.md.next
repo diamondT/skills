@@ -1,0 +1,10 @@
+Use the `nextjs-react-conventions` skill.
+
+## Commands
+- **Build**: `npm run build`
+- **Lint**: `npm run lint`
+- **Test all**: `CI_ENV=BITBUCKET npm run test`
+- **Test single file**: `npm test -- src/__tests__/path/to/test.tsx`
+- **Test coverage**: `npm run coverage`
+
+NEVER run dev server unless explicitly told to do so.
