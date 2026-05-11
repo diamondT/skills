@@ -1,18 +1,12 @@
 ---
 name: nextjs-react-conventions
 description: >
-  Enforce organisational TypeScript / Next.js / React coding and testing conventions in any
-  TS+React project (detected by a `package.json` listing `next`, `react`, or `react-dom` at
-  the repo root or an ancestor directory). Covers idiomatic style (no `any` — define
-  interfaces, `??` over `||`, always-braced blocks), data-fetching strategy (fetch in
-  server components by default; in client components use `use` or `useSWR`, never
-  `useEffect`), and testing rules (no `jest-dom` matchers, `userEvent` over `fireEvent`,
-  `resetAllMocks` over `clearAllMocks`, branch coverage on every new conditional). Use this
-  skill whenever you write, edit, refactor, or review `.ts` / `.tsx` files in such a
-  project, add a component or page, write a hook, fetch data, write a test, or are asked
-  anything resembling "add this feature", "fix this bug", "refactor X", "write a test for
-  Y", or "improve coverage". Trigger even when the user does not name the skill — these
-  conventions are mandatory and ad-hoc edits in these projects are not allowed.
+  Organisational TypeScript / Next.js / React coding and testing conventions (style,
+  data-fetching, branch coverage). Use whenever you write, edit, refactor, review, or test
+  `.ts` / `.tsx` files in a project whose `package.json` lists `next`, `react`, or
+  `react-dom` at the repo root or an ancestor directory. Triggers on phrases like "add this
+  feature", "fix this bug", "refactor X", "write a test for Y", "improve coverage" — even
+  when the user doesn't name the skill. Mandatory; no ad-hoc edits.
 ---
 
 # TypeScript / Next.js / React conventions

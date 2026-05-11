@@ -1,17 +1,11 @@
 ---
 name: java-maven-conventions
 description: >
-  Enforce organisational Java coding and testing conventions in any Java + Maven project
-  (detected by a `pom.xml` at the repo root or in a parent directory). Covers idiomatic
-  style (always `var`, always braces, fluent streams over loops, records + Lombok `@Builder`
-  for DTOs, `Optional.ofNullable().map().orElse(...)` over ternaries, `StringUtils` /
-  `CollectionUtils` over hand-rolled null/empty checks) and testing rules (no Mockito
-  lenient mode, write tests for new code, 100% branch coverage validated via the JaCoCo
-  report). Use this skill whenever you write, edit, refactor, or review `.java` files in a
-  Maven project, add new methods, write tests, or are asked anything resembling "add this
-  feature", "fix this bug", "refactor X", "write a test for Y", or "improve coverage".
-  Trigger even when the user does not name the skill — these conventions are mandatory and
-  ad-hoc Java edits in these projects are not allowed.
+  Organisational Java + Maven coding and testing conventions (style, idioms, JaCoCo branch
+  coverage). Use whenever you write, edit, refactor, review, or test `.java` files in a
+  project with a `pom.xml` at the repo root or an ancestor directory. Triggers on phrases
+  like "add this feature", "fix this bug", "refactor X", "write a test for Y", "improve
+  coverage" — even when the user doesn't name the skill. Mandatory; no ad-hoc Java edits.
 ---
 
 # Java + Maven coding conventions
