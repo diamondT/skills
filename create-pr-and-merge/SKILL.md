@@ -65,7 +65,7 @@ bb pr merge --message $'P00268-824 - add heartbeat to SSE discount events stream
 bb pr merge --message $'P00268-812 - fix coupon calc\n\nApply discount proportionally across products and services.\n\n<CO_AUTHORED_BY_TRAILER>' <PR_ID>
 ```
 
-`<CO_AUTHORED_BY_TRAILER>` is the literal `Co-Authored-By: …` line `create-pr` put in the commit — copy it verbatim, whatever co-author it names.
+`<CO_AUTHORED_BY_TRAILER>` is the literal `Co-Authored-By: …` line `create-pr` put in the commit — copy it verbatim, whatever co-author it names (e.g. `Co-Authored-By: 🤖 Claude Code (claude-opus-4-8)` — note the robot emoji and no email). Don't reconstruct or hardcode it; reuse exactly what step 1 produced.
 
 Why escape: keeping the message on one logical line avoids it being split across shell arguments or tripping on a raw multi-line paste, while `$'...'` turns the `\n` escapes back into genuine newlines so the body and trailer stay properly formatted. Use the message **verbatim** from step 1 — same subject, same body, same trailer. (A genuinely single-line message with no body and no trailer can use plain `"..."` quotes, but with the trailer that case won't occur.)
 

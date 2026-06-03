@@ -67,7 +67,17 @@ Present the commit message to the user with AskUserQuestion and ask for confirma
 
 ### 6. Commit and push
 
-- Commit using a HEREDOC for the message. Always append `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` at the end.
+- Commit using a HEREDOC for the message. End the message with a co-author trailer that credits the agent and model running this session — derive both from your own runtime context rather than hardcoding a version, since the model is upgraded regularly and a stale string would misattribute the work. Lead the trailer value with a robot emoji. Format:
+
+  ```
+  Co-Authored-By: 🤖 <agent name> (<model id>)
+  ```
+
+  Fill `<agent name>` with the agent running the session (e.g. `Claude Code`) and `<model id>` with the model powering it (e.g. `claude-opus-4-8`). No email — omit the `<...@...>` part entirely. Example:
+
+  ```
+  Co-Authored-By: 🤖 Claude Code (claude-opus-4-8)
+  ```
 - Push with `git push -u origin <branch>`.
 
 ### 7. Create pull request
