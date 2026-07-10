@@ -3,7 +3,7 @@ name: merge-pr
 description: >
   Merge an already-open Bitbucket pull request once its CI build is green, then clean up the
   local feature branch. Waits for the PR build, merges on success using the original commit
-  message (co-author trailer included), and prunes the merged branch. Use this skill whenever
+  message, and prunes the merged branch. Use this skill whenever
   the user says "merge pr", "merge PR 73", "merge my pull request", "merge this pr once ci
   passes", "merge it when the build is green", "/merge-pr", or otherwise wants an existing
   Bitbucket PR merged after its pipeline succeeds — the PR already exists; this skill does not
@@ -23,7 +23,7 @@ This skill takes a pull request that already exists, waits for its CI build, mer
 The skill needs four values. When a caller delegates to this skill (e.g. `create-pr-and-merge` right after `create-pr`), it passes them in — use those verbatim, don't re-derive. When invoked standalone, discover them from the PR itself; don't ask the user for what `bb` can tell you.
 
 - **`PR_ID`** — the PR number. If the user named one ("merge PR 73"), use it. If a caller passed it, use that. Otherwise run `bb pr list -o json` and pick the entry whose source branch is the current local branch (most recently created if several); if that's ambiguous, show the list and ask.
-- **`COMMIT_MESSAGE`** — the message the merge commit should carry: subject, optional body, **and** the `Co-Authored-By:` trailer. If a caller passed the exact message its commit used, reuse it verbatim — that keeps the merge commit faithful to the work, trailer and all. Standalone, reconstruct it from the PR's source-branch HEAD commit (`git log -1 <PR_BRANCH>` once fetched, or the PR's commit list via `bb`), preserving the original subject, body, and `Co-Authored-By:` trailer.
+- **`COMMIT_MESSAGE`** — the message the merge commit should carry: subject, optional body. If a caller passed the exact message its commit used, reuse it verbatim — that keeps the merge commit faithful to the work. Standalone, reconstruct it from the PR's source-branch HEAD commit (`git log -1 <PR_BRANCH>` once fetched, or the PR's commit list via `bb`), preserving the original subject, body.
 - **`TARGET_BRANCH`** — the PR destination (e.g. `main` or `next`). A caller passes the `--destination` it used; standalone, read it from `bb pr <PR_ID> -o json` (the destination branch). Needed for cleanup.
 - **`PR_BRANCH`** — the PR source (feature) branch. A caller passes the `--source`; standalone, read it from `bb pr <PR_ID> -o json`. Needed for cleanup.
 
@@ -55,19 +55,17 @@ bb pr merge --message "<COMMIT_MESSAGE>" <PR_ID>
 
 Only run this once step 1 reported a **successful** build — merging on red defeats the whole point of the gate.
 
-Because the message carries the `Co-Authored-By:` trailer (and possibly a body), it is **almost always multi-line**. Escape each newline as `\n` and use ANSI-C `$'...'` quoting so the shell expands them back into real newlines in the merge commit:
+Because the message possible carries a body, it is **almost always multi-line**. Escape each newline as `\n` and use ANSI-C `$'...'` quoting so the shell expands them back into real newlines in the merge commit:
 
 ```bash
-# subject + trailer
-bb pr merge --message $'P00268-824 - add heartbeat to SSE discount events stream\n\n<CO_AUTHORED_BY_TRAILER>' <PR_ID>
+# subject
+bb pr merge --message $'P00268-824 - add heartbeat to SSE discount events stream' <PR_ID>
 
-# subject + body + trailer
-bb pr merge --message $'P00268-812 - fix coupon calc\n\nApply discount proportionally across products and services.\n\n<CO_AUTHORED_BY_TRAILER>' <PR_ID>
+# subject + body
+bb pr merge --message $'P00268-812 - fix coupon calc\n\nApply discount proportionally across products and services.' <PR_ID>
 ```
 
-`<CO_AUTHORED_BY_TRAILER>` is the literal `Co-Authored-By: …` line on the original commit — copy it verbatim, whatever co-author it names (e.g. `Co-Authored-By: 🤖 Claude Code (claude-opus-4-8)` — note the robot emoji and no email). Don't reconstruct or hardcode it; reuse exactly what the commit produced.
-
-Why escape: keeping the message on one logical line avoids it being split across shell arguments or tripping on a raw multi-line paste, while `$'...'` turns the `\n` escapes back into genuine newlines so the body and trailer stay properly formatted. Use the message **verbatim** — same subject, same body, same trailer. (A genuinely single-line message with no body and no trailer can use plain `"..."` quotes, but with the trailer that case won't occur.)
+Why escape: keeping the message on one logical line avoids it being split across shell arguments or tripping on a raw multi-line paste, while `$'...'` turns the `\n` escapes back into genuine newlines so the body and trailer (if any) stay properly formatted. Use the message **verbatim** — same subject, same body, same trailer (if any). (A genuinely single-line message with no body and no trailer can use plain `"..."` quotes, but with the trailer that case won't occur.)
 
 If `bb pr merge` reports the PR can't be merged (e.g. the target moved, or new review changes are required), **stop and ask** — that's a judgment call for the user, not something to force through.
 

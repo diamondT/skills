@@ -23,7 +23,7 @@ Run the **`create-pr`** skill to commit, branch, push, and open the Bitbucket PR
 When `create-pr` finishes, capture four values you'll need downstream. Don't ask the user for these — they're all visible in what `create-pr` just did:
 
 - **`PR_ID`** — the PR number from the `bb pr create` output. If the output doesn't surface it cleanly, fall back to `bb pr list -o json` and take the entry whose source branch is your feature branch (most recently created if several).
-- **`COMMIT_MESSAGE`** — the exact commit message `create-pr` produced and the user confirmed: subject, body if any, **and** the `Co-Authored-By:` trailer `create-pr` appends (whatever co-author string it used — don't hardcode one). This whole thing — trailer included — is handed to `merge-pr` in step 2 to become the merge commit message, so keep it verbatim.
+- **`COMMIT_MESSAGE`** — the exact commit message `create-pr` produced and the user confirmed: subject, body if any. This whole thing is handed to `merge-pr` in step 2 to become the merge commit message, so keep it verbatim.
 - **`TARGET_BRANCH`** — the PR destination (the `--destination` passed to `bb pr create`, e.g. `main` or `next`). Needed for cleanup.
 - **`PR_BRANCH`** — the source feature branch (the `--source`). Needed for cleanup.
 
@@ -36,7 +36,7 @@ Run the **`merge-pr`** skill to wait for the PR build, merge once it's green, an
 `merge-pr` works standalone by discovering the PR's details, but you already captured everything it needs in step 1, so hand those four values straight across instead of making it re-derive them:
 
 - **`PR_ID`** → the PR to merge.
-- **`COMMIT_MESSAGE`** → the merge commit message, **verbatim** — same subject, same body, same `Co-Authored-By:` trailer `create-pr` produced. This is the important hand-off: passing it through keeps the merge commit faithful to the commit, trailer and all, rather than letting it be reconstructed from the PR.
+- **`COMMIT_MESSAGE`** → the merge commit message, **verbatim** — same subject, same body. This is the important hand-off: passing it through keeps the merge commit faithful to the commit, trailer (if any) and all, rather than letting it be reconstructed from the PR.
 - **`TARGET_BRANCH`** → the merge destination, for cleanup.
 - **`PR_BRANCH`** → the source feature branch, for cleanup.
 
