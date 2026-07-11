@@ -146,21 +146,23 @@ All tests must pass. If fails, report error and stop.
 git add package.json package-lock.json
 git commit -m "$(cat <<'EOF'
 ⬆️ upgrade project dependencies
-
-Co-Authored-By: Claude 🤖
 EOF
 )"
 ```
 
-#### 7.6 Push & Report
+#### 7.6 Push
 
 ```bash
 git push -u origin version-upgrades 2>&1
 ```
 
-Read push output, extract PR URL from remote response, and report to user.
+#### 7.7 Create PR & Merge
 
-Present a final summary table: package, old version → new version.
+Invoke the `create-pr-and-merge` skill to open the PR for the `version-upgrades` branch and merge it once CI is green. Do not create or merge the PR ad-hoc — delegate this step.
+
+### 8. Report
+
+Present a final summary table: package, old version → new version. Include the merged PR URL.
 
 ## Error Handling
 

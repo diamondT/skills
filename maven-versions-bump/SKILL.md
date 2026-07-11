@@ -6,7 +6,7 @@ description: >
   `mvn versions:update-properties`, revert any pre-release bumps that did not start as pre-
   release, build with `mvn clean package` (auto-fixing pedantic-pom-enforcer failures where
   possible), commit with `⬆️ version upgrades`, push, open a Bitbucket PR via `bb pr create`,
-  wait up to 15 minutes for the PR build, and squash-merge on green. Use this skill whenever
+  then delegate to the `merge-pr` skill to wait for the PR build and merge on green. Use this skill whenever
   the user says "upgrade versions", "upgrade dependencies", "bump deps", "upgrade spring
   boot", "version bump", "do the weekly upgrades", or anything resembling a routine
   dependency-bump workflow on a Spring Boot Maven repo. Trigger even if the user does not
@@ -172,50 +172,16 @@ bb pr create --title '⬆️ version upgrades' --source versions-upgrade --desti
 
 Use the `STARTING_BRANCH` you remembered in step 1 as `--destination`. Do not target `main`/`master` unless that genuinely was the starting branch (it should not be — step 1 only allows `next` or `release/*`).
 
-## Step 7 — Find the PR id
+## Step 7 — Merge on green (delegate to `merge-pr`)
 
-```bash
-bb pr list -o json
-```
+The PR already exists (step 6 opened it) — don't reimplement the wait/merge/cleanup logic here. Run the **`merge-pr`** skill (the same skill `create-pr-and-merge` delegates to for its merge half) and hand it what you already have:
 
-Locate the entry whose source branch is `versions-upgrade`. Capture its id as `PR_ID`. If multiple match, prefer the most recently created.
+- **`PR_ID`** — from the `bb pr create` output in step 6. If it didn't surface cleanly, fall back to `bb pr list -o json` and take the entry whose source branch is `versions-upgrade` (most recently created if several).
+- **`COMMIT_MESSAGE`** — `⬆️ version upgrades`, verbatim, for the merge commit message.
+- **`TARGET_BRANCH`** — `STARTING_BRANCH` from step 1.
+- **`PR_BRANCH`** — `versions-upgrade`.
 
-## Step 8 — Wait for the PR build
-
-```bash
-bb pr builds --wait 900 <PR_ID>
-```
-
-The `--wait 900` flag blocks for up to 15 minutes (900 s) once a build is actually running.
-
-**The build may not have started yet.** CI typically takes a few seconds to a minute to pick up a new PR push. If the command exits immediately reporting "no builds running" (or anything similar — empty list, "no pipelines found", etc.), wait ~15 s and re-run the same command. Repeat until the command begins blocking — that's the signal CI has picked up the PR and is now actively running. Cap the probe loop at ~5 minutes (≈20 retries); if no build has started by then, stop and ask the user whether CI is misconfigured or simply slow today. Why a probe loop and not a longer single wait: `bb pr builds --wait` only counts down once a build exists, so until then we have nothing to attach to.
-
-Once the command starts blocking, **do not probe further** — let it run to completion. It will return one of:
-
-- **Successful** → continue to step 9.
-- **Failed** → stop. Show the user the build output and ask how to proceed (typically: revert specific properties, or skip a known-bad bump).
-- **Timed out** (still running after 15 min) → stop and ask the user whether to keep waiting (`bb pr builds --wait 900 <PR_ID>` again) or abandon for now.
-
-## Step 9 — Merge (only if green)
-
-```bash
-bb pr merge --message '⬆️ version upgrades' --strategy squash <PR_ID>
-```
-
-Only run this when step 8 reported a successful build. Merging on red defeats the purpose of the gate.
-
-## Step 10 — Local cleanup
-
-After a successful merge, the remote `versions-upgrade` branch has already been deleted by the PR merge. Get back to the starting branch with the merge applied, and remove the now-obsolete local branch:
-
-```bash
-git fetch origin
-git checkout <STARTING_BRANCH>
-git pull --ff-only
-git branch -D versions-upgrade
-```
-
-`-D` (capital) is intentional: the local branch's tip won't appear merged into `<STARTING_BRANCH>` because the PR was squashed, so plain `-d` would refuse. The squash commit on `<STARTING_BRANCH>` already contains the work — discarding the local branch is safe.
+`merge-pr` waits for the PR build (stopping to ask on red or a stuck build — honour that, don't merge on red), merges once green using `bb`'s default merge strategy, and prunes the local `versions-upgrade` branch back to `STARTING_BRANCH`. Let it own all of that; do not hand-roll `bb pr builds`/`bb pr merge`/cleanup here.
 
 Then briefly summarize for the user:
 - Starting branch

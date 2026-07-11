@@ -118,13 +118,19 @@ EOF
 
 Replace version placeholders with actual versions.
 
-#### 4.6 Push & Report
+#### 4.6 Push
 
 ```bash
 git push -u origin version-upgrades 2>&1
 ```
 
-Read push output, extract "Create a pull request" URL from remote response, and report to user.
+#### 4.7 Create PR & Merge
+
+Invoke the `create-pr-and-merge` skill to open the PR for the `version-upgrades` branch and merge it once CI is green. Do not create or merge the PR ad-hoc — delegate this step.
+
+### 5. Report
+
+Present a final summary: package, old version → new version, and the merged PR URL.
 
 ## Error Handling
 
