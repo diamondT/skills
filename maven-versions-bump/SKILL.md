@@ -51,7 +51,22 @@ If `versions-upgrade` already exists locally or remotely, ask the user whether t
 Read the current Spring Boot parent version from the root `pom.xml` (`<parent><version>...</version>`). Look up the latest stable Spring Boot release:
 
 ```bash
-curl -s 'https://search.maven.org/solrsearch/select?q=g:org.springframework.boot+AND+a:spring-boot-starter-parent&rows=20&core=gav&wt=json'
+mvn -B versions:display-parent-updates
+```
+
+Look for the new version in the command output. The output will look like this if there is an upgrade available:
+```
+...
+[INFO] The parent project has a newer version:
+[INFO]   org.springframework.boot:spring-boot-starter-parent  4.0.7 -> 4.1.0
+...
+```
+If there is no update available, the output will say so, e.g.:
+```
+...
+[INFO] The parent project is the latest version:
+[INFO]   org.springframework.boot:spring-boot-starter-parent ......... 4.1.0
+...
 ```
 
 Skip pre-releases (anything matching `-M*`, `-RC*`, `-SNAPSHOT`, `-alpha*`, `-beta*`, `-CR*`, `-EA`).
