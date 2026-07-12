@@ -40,7 +40,27 @@ Also read any `CLAUDE.md` files in the repo — they define project-specific pat
 
 ## Step 3: Review the code
 
-Analyze the diff thoroughly. Be strict. Only flag things that genuinely matter.
+Analyze the diff thoroughly. Be strict. Only flag things that genuinely matter. Above all, this skill should push the reviewer to be ambitious about code structure. Do not merely identify local cleanup opportunities. Actively search for "code judo" moves: restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
+
+### Additional Standards
+
+**Be ambitious about structural simplification**
+- Do not stop at "this could be a bit cleaner."
+- Look for opportunities to reframe the change so that whole branches, helpers, modes, conditionals, or layers disappear entirely.
+- Prefer the solution that makes the code feel inevitable in hindsight.
+- Assume there is often a "code judo" move available: a re-organization that uses the existing architecture more effectively and makes the change dramatically simpler and more elegant.
+- If you see a path to delete complexity rather than rearrange it, push hard for that path.
+
+**Do not allow random spaghetti growth in existing code.**
+- Be highly suspicious of new ad-hoc conditionals, scattered special cases, or one-off branches inserted into unrelated flows.
+- If a change adds "weird if statements in random places", treat that as a design problem, not a stylistic nit.
+- Prefer pushing the logic into a dedicated abstraction, helper, state machine, policy object, or separate module instead of tangling an existing path.
+- Call out changes that make the surrounding code harder to reason about, even if they technically work.
+
+**Bias toward cleaning the design, not just accepting working code.**
+- If behavior can stay the same while the structure becomes meaningfully cleaner, push for the cleaner version.
+- Do not rubber-stamp "it works" implementations that leave the codebase messier.
+- Strongly prefer simplifications that remove moving pieces altogether over refactors that merely spread the same complexity around.
 
 **Logic & correctness**
 - Logic errors, off-by-one errors, race conditions
