@@ -25,6 +25,16 @@ if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   branch=$(git -C "$cwd" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null || git -C "$cwd" --no-optional-locks rev-parse --short HEAD 2>/dev/null)
 fi
 
+# working-tree status (+staged !modified ?untracked ⇡ahead ⇣behind, REBASE/MERGE…)
+# rendered by starship against a dedicated minimal config, so the shell prompt's
+# powerline colours stay out of here. STARSHIP_SHELL is cleared because an
+# inherited value makes starship emit %{..%} zsh prompt escapes.
+git_status=""
+if [ -n "$branch" ] && command -v starship >/dev/null 2>&1; then
+  git_status=$(STARSHIP_SHELL= STARSHIP_CONFIG="$HOME/.claude/starship-statusline.toml" \
+    starship prompt -p "$cwd" 2>/dev/null)
+fi
+
 sep="$(printf '\033[2m') │ $(printf '\033[0m')"
 reset=$(printf '\033[0m')
 
@@ -115,9 +125,11 @@ fi
 # cwd in blue with folder icon
 sections+=("$(printf '\033[34m')📁 ${short_cwd}${reset}")
 
-# git branch in magenta with branch icon
+# git branch in magenta with branch icon, working-tree status appended
 if [ -n "$branch" ]; then
-  sections+=("$(printf '\033[35m')🌿 ${branch}${reset}")
+  chunk="$(printf '\033[35m')🌿 ${branch}${reset}"
+  [ -n "$git_status" ] && chunk+=" ${git_status}"
+  sections+=("$chunk")
 fi
 
 # join sections with separator

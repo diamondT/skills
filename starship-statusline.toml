@@ -1,0 +1,37 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Minimal starship config used ONLY by ~/.claude/statusline-command.sh to render
+# the git working-tree status. Kept separate from ~/.config/starship.toml so the
+# shell prompt's powerline background colours don't bleed into the statusline.
+
+format = "$git_state$git_status"
+add_newline = false
+
+[git_state]
+# no wrapping (…) conditional group here: an all-empty nested group (the
+# progress counter, absent during a merge) collapses the whole outer group
+format = '[$state( $progress_current/$progress_total)]($style) '
+style = "bold red"
+rebase = "REBASE"
+merge = "MERGE"
+revert = "REVERT"
+cherry_pick = "CHERRY-PICK"
+bisect = "BISECT"
+am = "AM"
+am_or_rebase = "AM/REBASE"
+
+[git_status]
+# counts make the statusline actually informative; plain symbols don't
+format = '([$ahead_behind]($style))([$all_status](yellow))'
+style = "cyan"
+conflicted = '[~${count}](red)'
+ahead = '⇡${count}'
+behind = '⇣${count}'
+diverged = '⇡${ahead_count}⇣${behind_count}'
+up_to_date = ''
+untracked = '?${count}'
+stashed = '≡${count}'
+modified = '!${count}'
+staged = '+${count}'
+renamed = '»${count}'
+deleted = '✘${count}'
