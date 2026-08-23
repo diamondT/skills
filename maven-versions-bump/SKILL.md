@@ -1,17 +1,7 @@
 ---
 name: maven-versions-bump
-description: >
-  End-to-end automated dependency upgrade for a Spring Boot Maven project: branch off `next`
-  or `release/x.y.z`, bump Spring Boot (patch automatically, minor or major asks first), run
-  `mvn versions:update-properties`, revert any pre-release bumps that did not start as pre-
-  release, build with `mvn clean package` (auto-fixing pedantic-pom-enforcer failures where
-  possible), commit with `⬆️ version upgrades`, push, open a Bitbucket PR via `bb pr create`,
-  then delegate to the `merge-pr` skill to wait for the PR build and merge on green. Use this skill whenever
-  the user says "upgrade versions", "upgrade dependencies", "bump deps", "upgrade spring
-  boot", "version bump", "do the weekly upgrades", or anything resembling a routine
-  dependency-bump workflow on a Spring Boot Maven repo. Trigger even if the user does not
-  name the skill — this is the canonical upgrade procedure for these projects and ad-hoc
-  upgrades are not allowed.
+description: Upgrade Spring Boot and Maven dependency versions on a branch, build, open a Bitbucket PR, merge on green.
+disable-model-invocation: true
 ---
 
 # Maven versions bump
@@ -69,7 +59,31 @@ If there is no update available, the output will say so, e.g.:
 ...
 ```
 
-Skip pre-releases (anything matching `-M*`, `-RC*`, `-SNAPSHOT`, `-alpha*`, `-beta*`, `-CR*`, `-EA`).
+### Pre-releases are skipped — but don't stop there
+
+Skip pre-releases (anything matching `-M*`, `-RC*`, `-SNAPSHOT`, `-alpha*`, `-beta*`, `-CR*`, `-EA`) — they aren't production-ready.
+
+The trap: `display-parent-updates` reports only the single highest version, so one pre-release hides every stable release underneath it. On `4.1.0` the plugin may report `4.2.0-M1`; you correctly skip the milestone, but `4.1.1` may exist and would go unnoticed. So whenever the reported candidate is a pre-release, ask Maven again with the search range narrowed:
+
+```bash
+# latest patch within the current minor (e.g. 4.1.x)
+mvn -B versions:display-parent-updates -DallowMinorUpdates=false
+
+# latest minor within the current major (e.g. 4.x)
+mvn -B versions:display-parent-updates -DallowMajorUpdates=false
+```
+
+(`allowMinorUpdates=false` implies `allowMajorUpdates=false`, so the first command really is patch-only.)
+
+Walk down the ladder until a stable version turns up:
+
+1. Narrowed **patch** run reports a stable version → that's the target; patch rules apply (proceed automatically).
+2. Otherwise the narrowed **minor** run reports a stable version → that's the target; minor rules apply (ask first).
+3. Every run reports only pre-releases, or no update at all → the parent stays put. Say what you skipped and why, e.g. "Spring Boot stays at `4.1.0` — the only newer release is `4.2.0-M1`, a milestone."
+
+Both narrowed runs are cheap, so also use them to fill in `<latest-patch>` / `<latest-minor>` for the questions below.
+
+### Classifying the jump
 
 Classify the jump from `current` (e.g. `3.4.1`) → candidate target. The upgrade behaviour is:
 
@@ -110,6 +124,33 @@ Replace `<skill-dir>` with the absolute path of this skill (the harness will tel
 
 If the script reports zero reverts, you can skip straight to step 5.
 
+### A reverted property may still have a stable update underneath
+
+Same trap as the parent in step 3: `update-properties` moves each property to the single highest version it can find, so one pre-release masks every stable release below it. A property that went `1.9.3` → `2.0.0-M1` and got reverted looks "already up to date", while `1.9.4` or `1.10.0` may be sitting right there.
+
+So when the script reverted anything, run two narrowed passes — widest first, reverting after each:
+
+```bash
+# pass 1 — minor + patch, no major (e.g. 1.9.3 → 1.10.0)
+mvn versions:update-properties -DgenerateBackupPoms=false -DallowMajorUpdates=false
+<skill-dir>/scripts/revert_pre_release_bumps.sh          # dry run, then --apply
+
+# pass 2 — patch only (e.g. 1.9.3 → 1.9.4)
+mvn versions:update-properties -DgenerateBackupPoms=false -DallowMinorUpdates=false
+<skill-dir>/scripts/revert_pre_release_bumps.sh          # dry run, then --apply
+```
+
+Pass 2 only earns its keep when pass 1's candidate is *also* a pre-release (e.g. `1.10.0-RC1` hiding `1.9.4`). As in step 3, `allowMinorUpdates=false` implies `allowMajorUpdates=false`, so pass 2 really is patch-only.
+
+Two things make this safe to run across the whole reactor instead of property-by-property:
+
+- Each pass recomputes from the value currently in the pom, and a narrower range can never land *lower* than what a wider pass already applied. Properties that reached a stable version in the first run stay put; only the reverted ones move.
+- The revert script always diffs against the committed (HEAD) value, so "was this property stable before the upgrade?" stays correctly anchored however many passes you run.
+
+Stop as soon as a pass leaves a property on a stable version. A property still reverted after pass 2 genuinely has no stable release newer than its current value — leave it and mention it in the final summary (e.g. "`foo.version` stays at `1.9.3`; only `2.0.0-M1` is newer"). Don't invent versions.
+
+If a narrowed pass changes nothing and the working tree is otherwise clean, the script exits 2 with "No pom.xml changes detected" — here that means "nothing left to find", not an error.
+
 If a `dependencyManagement` entry references a property that was not bumped (Maven could not find a newer release), the property simply stays as-is. Note any such properties to mention to the user at the end — do not invent versions.
 
 ### No-op short-circuit
@@ -139,18 +180,44 @@ Before running this, check the project for build instructions that override the 
 
 If any of those define a different build command (e.g. `mvn -P ci verify`, `make build`, profile activation, env vars), use that instead. Why: some projects gate full verification behind a profile, and `mvn clean package` alone misses the real CI build.
 
-**Per-attempt timeout: 5 minutes (300000 ms).** Pass this to the Bash tool's `timeout` parameter on every build invocation in this step (the default `mvn` retry below `mvn validate` for enforcer fixes counts too). If a build attempt times out, treat it the same as a failure — show the user the partial output and stop. A build that hasn't finished in 5 min on this workflow almost always means a hang (held lock, network stall on a fresh artifact download), not slow compilation; pushing past the timeout rarely helps.
+**Per-attempt timeout: 5 minutes (300000 ms).** Pass this to the Bash tool's `timeout` parameter on every build invocation in this step (including any re-run after a fix the user approved — `mvn validate` alone is enough to retry the enforcer phase). If a build attempt times out, treat it the same as a failure — show the user the partial output and stop. A build that hasn't finished in 5 min on this workflow almost always means a hang (held lock, network stall on a fresh artifact download), not slow compilation; pushing past the timeout rarely helps.
 
 ### Handling pedantic-pom-enforcer failures
 
-If the build fails inside `maven-enforcer-plugin` (look for `Rule X failed with message:` or `[ERROR] Failed to execute goal org.apache.maven.plugins:maven-enforcer-plugin`), **try to fix it before stopping**. The common failure modes have deterministic fixes:
+If the build fails inside `maven-enforcer-plugin` (look for `Rule X failed with message:` or `[ERROR] Failed to execute goal org.apache.maven.plugins:maven-enforcer-plugin`), **diagnose it and stop** — do not fix and re-run on your own.
 
-- **`dependencyConvergence` / `requireUpperBoundDeps`** — two transitive paths bring in different versions of the same artifact. The fix is to pin the higher of the two in `<dependencyManagement>` (and add a `<version>` property if missing). Use `mvn dependency:tree -Dverbose` to find the conflicting paths; pick the highest version mentioned and add a `dependencyManagement` entry referencing a new `${...}` property.
-- **`banDuplicatePomDependencyVersions`** — a property is declared twice or a `<dependency>` has both an inline `<version>` and a `dependencyManagement` entry. Remove the duplicate.
-- **`requireSameVersions` (project.groupId)** — sibling modules drifted. Bring them back in line with the parent's version.
-- **CompoundPedanticEnforcer / `manageDependencyVersions`** — an inline `<version>` slipped into a `<dependency>` block. Move it into `<dependencyManagement>` and use a property.
+An enforcer failure straight after a version bump is information, not an obstacle: it's the build telling you the new version set is internally inconsistent. Silencing the rule usually buries a real incompatibility that resurfaces at runtime, where it costs far more to find.
 
-After each fix, re-run the build (or just `mvn validate` to retry the enforcer phase). Iterate up to **3 fix attempts**. If after 3 attempts the enforcer is still failing, **stop** and show the user the remaining failure with the diagnosis you've reached so far — at that point the resolution likely needs a human judgment call (e.g. choose between two incompatible upgrades).
+Two fixes are off limits, however neatly they'd turn the build green:
+
+- **Never override a version the parent manages.** Not by redefining a parent property (`spring-framework.version`, `jackson-bom.version`, and every other property the Spring Boot parent declares — the list is long and this applies to all of it), and not by any other route. The parent BOM is a set of versions released and tested *together*; pulling one member out of that set desyncs it, and Maven will happily build the result while the mismatch waits to blow up at runtime.
+- **Never shadow a parent-managed dependency with a local `<dependencyManagement>` entry.** Same damage, different syntax.
+
+If the tidy-looking fix needs either of those, that's the signal to stop — not the signal to get clever.
+
+Investigate first:
+
+```bash
+# who drags in which version, along which path
+mvn dependency:tree -Dverbose -Dincludes=<groupId>:<artifactId>
+
+# is this version coming from the parent? (empty/null = not parent-managed)
+mvn help:evaluate -Dexpression=<some.version> -q -DforceStdout
+
+# what the parent actually manages
+mvn help:effective-pom
+```
+
+The question to answer is **which change in this upgrade caused it**. Usually one of:
+
+- `dependencyConvergence` / `requireUpperBoundDeps` — a bumped third-party dependency now wants a newer transitive than the parent manages (or a Spring Boot bump moved a managed version out from under a dependency this project pins). The honest fixes are to bump Spring Boot to a release that manages the newer version, or to hold the offending dependency back at its old value. Both are the user's call, not yours.
+- `banDuplicatePomDependencyVersions`, `requireSameVersions`, CompoundPedanticEnforcer's `manageDependencyVersions` — these are local to this project's own pom (a property declared twice, an inline `<version>` that belongs in `<dependencyManagement>`, sibling modules drifted off the parent's version). Nothing parent-managed is involved, so the fix is safe in principle — but still show it before applying; it's a one-line diff and cheap to confirm.
+
+Then stop and report, in this shape:
+
+> `<build command>` failed on `<rule>`: `<message>`. Root cause: `<what conflicts with what, and which bump introduced it>`. Options: (1) `<proposal>`, (2) `<alternative — e.g. revert `foo.version` to `1.9.3`>`. How do you want to proceed?
+
+Wait for the answer, then apply what the user chose. If they pick something that does override a parent-managed version, that's their decision — apply it, and note once what it desyncs.
 
 ### Other build failures
 
@@ -187,7 +254,7 @@ Then briefly summarize for the user:
 - Starting branch
 - Spring Boot version delta (or "unchanged")
 - Properties bumped (and properties reverted as pre-release)
-- Enforcer fixes applied (if any)
+- Enforcer failures hit, and what the user decided (if any)
 - PR id and merge status
 
 ## Edge cases
