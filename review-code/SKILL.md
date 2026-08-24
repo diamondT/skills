@@ -18,7 +18,7 @@ Whatever the user provided second, treat as the current point. If empty, then se
 Fetch and checkout the latest refs, then get the full diff:
 ```bash
 git fetch origin
-git <fixed-point>...<current-point>
+git diff <fixed-point>...<current-point>
 ```
 
 If they didn't specify anything, look for uncommited changes in the current branch and treat those as your diff. If that set is also empty, then ask.
