@@ -1,7 +1,6 @@
 ---
 name: review-code
 description: "Review the changes since a fixed point (commit, branch, tag, or merge-base)"
-disable-model-invocation: true
 ---
 
 # Code Review

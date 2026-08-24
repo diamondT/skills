@@ -1,5 +1,0 @@
-interface:
-  display_name: "review-code"
-  short_description: "Review the changes since a fixed point (commit, branch, tag, or merge-base)"
-policy:
-  allow_implicit_invocation: false
