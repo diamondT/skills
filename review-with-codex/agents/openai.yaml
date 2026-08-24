@@ -1,0 +1,5 @@
+interface:
+  display_name: "review-with-codex"
+  short_description: "Execute the review code skill with codex."
+policy:
+  allow_implicit_invocation: false

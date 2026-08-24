@@ -1,0 +1,5 @@
+interface:
+  display_name: "maven-versions-bump"
+  short_description: "Upgrade Spring Boot and Maven dependency versions on a branch, build, open a Bitbucket PR, merge on green."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "review-pr"
+  short_description: "Review the changes in a BitBucket pull request"
+policy:
+  allow_implicit_invocation: false
