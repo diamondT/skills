@@ -21,7 +21,7 @@ If no points where provided, then the prompt would be just "$review-code".
 ```bash
 codex exec \
   -m gpt-5.6-sol -c model_reasoning_effort="high" \
-  -s workspace-read \
+  -s read-only \
   -C <absolute path to the project> \
   -o <scratchpad>/codex-review-last-message.txt \
   <prompt> \
