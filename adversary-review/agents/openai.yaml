@@ -1,0 +1,5 @@
+interface:
+  display_name: "adversary-review"
+  short_description: "Review changes with two independent adversarial reviewers, then verify every finding yourself."
+policy:
+  allow_implicit_invocation: false
