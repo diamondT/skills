@@ -1,11 +1,8 @@
 ---
 name: create-pr
 description: >
-  Interactive workflow to commit, branch, and push changes with JIRA ticket prefixes.
-  Use when the user says "commit", "push my changes", "create pr", "/create-pr",
-  or wants to create a commit tied to a JIRA ticket. Also use when the user asks to
-  branch and commit work, prepare a commit message with a ticket number, or push
-  changes to a Bitbucket/Git remote with a JIRA-prefixed branch and message.
+  Interactive workflow create a Bitbucket PR. Use only when the user says 
+  "create pr" or "/create-pr".
 ---
 
 # JIRA Commit Workflow

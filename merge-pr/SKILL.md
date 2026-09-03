@@ -1,17 +1,8 @@
 ---
 name: merge-pr
 description: >
-  Merge an already-open Bitbucket pull request once its CI build is green, then clean up the
-  local feature branch. Waits for the PR build, merges on success using the original commit
-  message, and prunes the merged branch. Use this skill whenever
-  the user says "merge pr", "merge PR 73", "merge my pull request", "merge this pr once ci
-  passes", "merge it when the build is green", "/merge-pr", or otherwise wants an existing
-  Bitbucket PR merged after its pipeline succeeds — the PR already exists; this skill does not
-  create one. Trigger even if the user does not name the skill. This is the canonical
-  merge-on-green procedure for these projects; do not run ad-hoc merges. This is NOT for
-  reintegrating a `release/x.y.z` branch back into `next` (use `merge-release` for that), and
-  NOT for the combined create-then-merge flow (use `create-pr-and-merge`, which delegates here).
-  When CI fails or anything is ambiguous, stop and ask rather than improvise.
+  Merge an open Bitbucket PR. Use this skill whenever the user says "merge pr", "merge PR 73",
+  "/merge-pr".
 ---
 
 # Merge a Bitbucket PR on green
