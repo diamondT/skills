@@ -5,7 +5,6 @@ context: fork
 agent: general-purpose
 model: opus
 effort: xhigh
-disable-model-invocation: true
 ---
 
 Implement the work described by the caller.
