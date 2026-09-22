@@ -1,5 +1,9 @@
 ---
 name: review-code
+context: fork
+agent: general-purpose
+model: opus
+effort: xhigh
 description: "Review the changes since a fixed point (commit, branch, tag, or merge-base)"
 ---
 
@@ -24,8 +28,6 @@ git diff <fixed-point>...<current-point>
 If they didn't specify anything, look for uncommited changes in the current branch and treat those as your diff. If that set is also empty, then ask.
 
 ## Step 3: Review the code
-
-Read any `CLAUDE.md` files in the repo — they define project-specific patterns and conventions you must enforce during review.
 
 Analyze the diff thoroughly. Be strict. Only flag things that genuinely matter. Above all, this skill should push the reviewer to be ambitious about code structure. Do not merely identify local cleanup opportunities. Actively search for "code judo" moves: restructurings that preserve behavior while making the implementation dramatically simpler, smaller, more direct, and more elegant.
 

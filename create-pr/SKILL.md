@@ -1,5 +1,9 @@
 ---
 name: create-pr
+context: fork
+agent: general-purpose
+model: opus
+effort: xhigh
 description: >
   Interactive workflow create a Bitbucket PR. Use only when the user says 
   "create pr" or "/create-pr".
