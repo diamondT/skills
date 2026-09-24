@@ -1,15 +1,7 @@
 ---
 name: create-pr-and-merge
-description: >
-  End-to-end "open a Bitbucket PR and then merge it once CI is green" workflow.
-  Delegates PR creation to the `create-pr` skill, then waits for the PR build,
-  merges on success, and cleans up the local branch. Use this skill whenever the
-  user says "create pr and merge", "open a pr and merge it", "create and merge",
-  "push and merge my changes", "commit and merge", "ship this", "/create-pr-and-merge",
-  or otherwise wants changes committed, pushed, opened as a PR, AND merged after the
-  build passes — not just opened. Trigger even if the user does not name the skill.
-  This is the canonical create-then-merge procedure for these projects; do not run
-  ad-hoc merges. When CI fails or anything is ambiguous, stop and ask rather than improvise.
+description: Create a Bitbucket PR, wait for green CI and merge.
+disable-model-invocation: true
 ---
 
 # Create a PR and merge it on green
