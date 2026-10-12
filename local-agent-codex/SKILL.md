@@ -1,18 +1,7 @@
 ---
 name: local-agent-codex
-description: >
-  Plan a task thoroughly, then delegate its execution to an external agent harness
-  (OpenAI Codex CLI) running locally, instead of a regular built-in sub-agent.
-  Writes a detailed self-contained prompt from the plan, runs `codex exec` with a
-  specific model, waits for the result, and marks the task done only when the
-  external agent reports success. Use this skill whenever the user says "local
-  agent codex", "/local-agent-codex", "delegate to codex", "use codex", "have
-  codex do it", "offload this to codex", or otherwise wants the actual
-  implementation work performed by the Codex CLI while you do the planning and
-  verification. Trigger even if the user does not name the skill. Do NOT use for
-  ordinary sub-agent work (use the Agent tool), for opencode delegation (use
-  `local-agent-opencode`), or when the user wants you to implement the change
-  yourself.
+description: Plan a task, delegate implementation to the local Codex CLI (`codex exec`), and verify the result.
+disable-model-invocation: true
 ---
 
 # Delegate execution to a local external agent (Codex CLI)

@@ -1,17 +1,9 @@
 ---
 name: merge-release
 description: >
-  End-to-end automated merge of a `release/x.y.z` branch back into `next` (the rolling
-  development branch). Identifies the release branch (asking the user if ambiguous),
-  refreshes both `next` and the release branch, creates a `merge-release` integration
-  branch, performs a `--no-ff` merge with the canonical commit message, runs the full
-  build+tests, pushes, opens a Bitbucket PR, waits for CI, fast-forward-merges on green,
-  and cleans up. Use this skill whenever the user says "merge release", "merge release
-  into next", "release back-merge", "fold release into next", "/merge-release", or any
-  phrasing about reintegrating a release branch back into the development line. Trigger
-  even if the user does not name the skill — this is the canonical procedure for these
-  projects and ad-hoc release back-merges are not allowed. NEVER force push at any step.
-  When uncertain, pause and ask the user rather than improvise.
+  Merge a `release/x.y.z` branch back into `next` via a Bitbucket PR. Use whenever the user
+  says "merge release", "release back-merge", "fold release into next", or otherwise wants
+  a release branch reintegrated into `next`.
 ---
 
 # Merge release back into next

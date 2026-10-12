@@ -1,14 +1,9 @@
 ---
 name: pom
 description: >
-  Author or modify Maven `pom.xml` files for Spring Boot projects following strict
-  organisational conventions: versions only in `<properties>` + `<dependencyManagement>`,
-  required plugins (maven-enforcer-plugin with pedantic-pom-enforcers, spotless, jacoco,
-  git-commit-id, native-maven, spring-boot with AOT for Java 25+), and grouped dependency
-  ordering. Use this skill whenever the user creates a new `pom.xml`, scaffolds a Spring Boot
-  Maven project, adds or upgrades a dependency, configures a Maven plugin, edits parent/BOM,
-  or asks anything like "add X to pom", "bump version", "configure plugin Y", "new spring boot
-  project". Always apply this skill — do not edit `pom.xml` files ad-hoc without it.
+  Organisational conventions for Spring Boot Maven `pom.xml` files (versions, required plugins,
+  dependency ordering). Use whenever creating or editing a `pom.xml`: new project, add/bump a
+  dependency, configure a plugin, change parent/BOM. Mandatory; no ad-hoc pom edits.
 ---
 
 # Spring Boot pom.xml conventions
