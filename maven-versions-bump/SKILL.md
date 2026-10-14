@@ -28,10 +28,16 @@ git rev-parse --abbrev-ref HEAD
 
   Wait for the answer, then `git checkout <answer>` and `git pull --ff-only` before continuing. If the user names a branch that does not exist, surface the error rather than guessing.
 
+  **Branch busy in another worktree**: before that checkout, run `git worktree list`. If `<answer>` shows up as `[<answer>]` in another worktree, `git checkout` would fail — don't check it out. Run `git fetch origin <answer>` instead and branch off `origin/<answer>` in step 2.
+
 ## Step 2 — Create the upgrade branch
+
+First remember where you are as `ORIGINAL_REF`: `git rev-parse --abbrev-ref HEAD` (if that prints `HEAD`, i.e. detached, use `git rev-parse HEAD`). The no-op cleanup in step 4 returns there.
 
 ```bash
 git checkout -b versions-upgrade
+# starting branch busy in another worktree (step 1):
+git checkout -b versions-upgrade origin/<STARTING_BRANCH>
 ```
 
 If `versions-upgrade` already exists locally or remotely, ask the user whether to delete the stale branch (`git branch -D versions-upgrade` and/or `git push origin --delete versions-upgrade`) before recreating. Don't silently overwrite — a stale branch may contain in-progress work.
@@ -108,9 +114,9 @@ mvn versions:update-properties -DgenerateBackupPoms=false
 
 This rewrites version values inside `<properties>` for every property that is referenced from a `<dependency>` or `<plugin>` and has a newer release on Maven Central.
 
-Then handle pre-release bumps. The rule: revert a property if the **new** value is a pre-release (alpha / beta / M / RC / SNAPSHOT / CR / EA) AND the **old** value was a stable release. Reason: pre-releases are unstable and we don't want them appearing automatically; but if the project was already on a pre-release, the user is intentionally tracking that line and we must not regress them.
+Then handle pre-release bumps. The rule: revert a property if the **new** value is a pre-release (alpha / beta / M / RC / SNAPSHOT / CR / EA, separated by `-` or `.`, e.g. `-M1`, `.Beta2`) or a vendor rebuild (`.redhat-N`, `.jbossorg-N`) AND the **old** value was a stable release. Reason: these are unstable and we don't want them appearing automatically; but if the project was already on one, the user is intentionally tracking that line and we must not regress them.
 
-Use the bundled script — it handles the diff parsing, the pre-release regex, and the in-place rewrite:
+Use the bundled script — it handles the HEAD-vs-working-tree comparison, the unstable-version regex, and the in-place rewrite:
 
 ```bash
 # Always start with a dry run to see what would change
@@ -120,7 +126,7 @@ Use the bundled script — it handles the diff parsing, the pre-release regex, a
 <skill-dir>/scripts/revert_pre_release_bumps.sh --apply
 ```
 
-Replace `<skill-dir>` with the absolute path of this skill (the harness will tell you). The script must run from the project root (where `pom.xml` lives) so its `git diff` calls see the working tree.
+Replace `<skill-dir>` with the absolute path of this skill (the harness will tell you). The script must run inside the project's git repo; it compares every modified `pom.xml` at HEAD against the working tree.
 
 If the script reports zero reverts, you can skip straight to step 5.
 
@@ -158,11 +164,11 @@ If a `dependencyManagement` entry references a property that was not bumped (Mav
 If at this point `git diff` produces no output (Spring Boot was already at the chosen target in step 3, AND `mvn versions:update-properties` found nothing to bump, OR every bump was reverted as a pre-release), the upgrade is a no-op. Don't proceed — there's nothing to build, push, or merge. Clean up and stop:
 
 ```bash
-git checkout <STARTING_BRANCH>
+git checkout <ORIGINAL_REF>
 git branch -D versions-upgrade
 ```
 
-Then tell the user: everything is already at the latest stable, no PR was opened. (Capital `-D` is fine here even though no commits were made — the branch never diverged.)
+`ORIGINAL_REF` is the ref from step 2 — normally `STARTING_BRANCH`; when the starting branch was busy in another worktree, it's the ref this worktree was on before. Then tell the user: everything is already at the latest stable, no PR was opened. (Capital `-D` is fine here even though no commits were made — the branch never diverged.)
 
 ## Step 5 — Verify the build
 
@@ -226,6 +232,16 @@ If the build fails for non-enforcer reasons (compile error, test failure, missin
 - A bumped dependency introduced an incompatible API change → suggest reverting just that property and trying again.
 - A test failure that looks unrelated → re-run once. If it still fails, treat as a real failure.
 
+## bb in a worktree
+
+`bb` reads the Bitbucket workspace and repo from `./.git/config`. In a git worktree `.git` is a file, so `bb` fails with `missing required field: workspace`. Check:
+
+```bash
+git rev-parse --path-format=absolute --git-dir --git-common-dir
+```
+
+If the two lines differ, you're in a worktree. Derive `WORKSPACE` / `REPO_SLUG` from `git remote get-url origin`: drop a trailing `.git`, split on `/` and `:` — the last two segments are `<WORKSPACE>` and `<REPO_SLUG>` (e.g. `git@bitbucket.org:acme/shop.git` or `https://user@bitbucket.org/acme/shop` → `acme`, `shop`). Then add `-w <WORKSPACE> -r <REPO_SLUG>` after the subcommand on **every** `bb` call (`bb pr create -w acme -r shop …`) — they're subcommand options, not global ones. Write the literal values; shell variables don't persist between calls.
+
 ## Step 6 — Commit, push, open PR
 
 ```bash
@@ -237,23 +253,24 @@ git push -u origin versions-upgrade
 bb pr create --title '⬆️ version upgrades' --source versions-upgrade --destination <STARTING_BRANCH>
 ```
 
-Use the `STARTING_BRANCH` you remembered in step 1 as `--destination`. Do not target `main`/`master` unless that genuinely was the starting branch (it should not be — step 1 only allows `next` or `release/*`).
+In a worktree, add `-w`/`-r` (see "bb in a worktree"). Use the `STARTING_BRANCH` you remembered in step 1 as `--destination`. Do not target `main`/`master` unless that genuinely was the starting branch (it should not be — step 1 only allows `next` or `release/*`).
 
 ## Step 7 — Merge on green (delegate to `merge-pr`)
 
 The PR already exists (step 6 opened it) — don't reimplement the wait/merge/cleanup logic here. Run the **`merge-pr`** skill (the same skill `create-pr-and-merge` delegates to for its merge half) and hand it what you already have:
 
-- **`PR_ID`** — from the `bb pr create` output in step 6. If it didn't surface cleanly, fall back to `bb pr list -o json` and take the entry whose source branch is `versions-upgrade` (most recently created if several).
+- **`PR_ID`** — from the `bb pr create` output in step 6. If it didn't surface cleanly, fall back to `bb pr list -o json` (with `-w`/`-r` in a worktree) and take the entry whose source branch is `versions-upgrade` (most recently created if several).
 - **`COMMIT_MESSAGE`** — `⬆️ version upgrades`, verbatim, for the merge commit message.
 - **`TARGET_BRANCH`** — `STARTING_BRANCH` from step 1.
 - **`PR_BRANCH`** — `versions-upgrade`.
+- **`WORKSPACE`** / **`REPO_SLUG`** — only in a worktree, the values from "bb in a worktree".
 
-`merge-pr` waits for the PR build (stopping to ask on red or a stuck build — honour that, don't merge on red), merges once green using `bb`'s default merge strategy, and prunes the local `versions-upgrade` branch back to `STARTING_BRANCH`. Let it own all of that; do not hand-roll `bb pr builds`/`bb pr merge`/cleanup here.
+`merge-pr` waits for the PR build (stopping to ask on red or a stuck build — honour that, don't merge on red), merges once green using `bb`'s default merge strategy, and prunes the local `versions-upgrade` branch back to `STARTING_BRANCH` (in a worktree: removes the worktree and prunes from the main repo). Let it own all of that; do not hand-roll `bb pr builds`/`bb pr merge`/cleanup here.
 
 Then briefly summarize for the user:
 - Starting branch
 - Spring Boot version delta (or "unchanged")
-- Properties bumped (and properties reverted as pre-release)
+- Properties bumped (and properties reverted as pre-release / vendor build)
 - Enforcer failures hit, and what the user decided (if any)
 - PR id and merge status
 

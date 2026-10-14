@@ -46,10 +46,14 @@ git pull --ff-only
 
 If `git pull --ff-only` fails (local `next` has diverged from origin), **stop**. Show the user the divergence and ask how to proceed — never `git reset --hard` or force-update without explicit instruction. A diverged `next` usually means someone has work in progress locally.
 
+**Branch busy in another worktree**: before checking out `next` here (or `<RELEASE_BRANCH>` in step 4), run `git worktree list`. If the branch shows up as `[<branch>]` in another worktree, `git checkout` would fail — don't check it out; use `origin/<branch>` in its place (step 1's fetch already refreshed it). For `next`, skip the checkout + pull and remember the current ref as `ORIGINAL_REF` (`git rev-parse --abbrev-ref HEAD`, or `git rev-parse HEAD` if detached).
+
 ## Step 3 — Create the integration branch
 
 ```bash
 git checkout -b merge-release
+# next busy in another worktree (step 2):
+git checkout -b merge-release origin/next
 ```
 
 If `merge-release` already exists locally or on origin, **stop and ask** the user whether to delete the stale branch (`git branch -D merge-release` and/or `git push origin --delete merge-release`) before recreating. Don't silently overwrite — a stale branch may contain in-progress work from a previous attempt.
@@ -74,6 +78,14 @@ git merge --no-ff <RELEASE_BRANCH> -m "merge <RELEASE_BRANCH> into next"
 ```
 
 Replace `<RELEASE_BRANCH>` literally in the commit message (e.g. `merge release/1.4.0 into next`). The `--no-ff` is intentional — it preserves the merge as a discrete commit so the back-merge is visible in history.
+
+If `<RELEASE_BRANCH>` is busy in another worktree (see step 2), skip the checkout + pull above and merge the remote-tracking ref, keeping the bare name in the message:
+
+```bash
+git merge --no-ff origin/<RELEASE_BRANCH> -m "merge <RELEASE_BRANCH> into next"
+```
+
+Likewise, below, read `<RELEASE_BRANCH>` / `next` as `origin/<RELEASE_BRANCH>` / `origin/next` in the `git log` commands for any branch that was busy.
 
 ### Resolving merge conflicts
 
@@ -136,6 +148,18 @@ If the build fails:
 
 In all cases, **stop on red**. Never push a known-broken merge: the PR build will reject it anyway, and pushing wastes a CI cycle.
 
+## bb in a worktree
+
+`bb` reads the Bitbucket workspace and repo from `./.git/config`. In a git worktree `.git` is a file, so `bb` fails with `missing required field: workspace`. Check:
+
+```bash
+git rev-parse --path-format=absolute --git-dir --git-common-dir
+```
+
+If the two lines differ, you're in a worktree. Derive `WORKSPACE` / `REPO_SLUG` from `git remote get-url origin`: drop a trailing `.git`, split on `/` and `:` — the last two segments are `<WORKSPACE>` and `<REPO_SLUG>` (e.g. `git@bitbucket.org:acme/shop.git` or `https://user@bitbucket.org/acme/shop` → `acme`, `shop`). Then add `-w <WORKSPACE> -r <REPO_SLUG>` after the subcommand on **every** `bb` call (`bb pr create -w acme -r shop …`) — they're subcommand options, not global ones. Write the literal values; shell variables don't persist between calls.
+
+Here that means every `bb` call in steps 6–8.
+
 ## Step 6 — Push and open the PR
 
 ```bash
@@ -143,7 +167,7 @@ git push -u origin merge-release
 bb pr create --title 'merge <RELEASE_BRANCH> into next' --source merge-release --destination next
 ```
 
-Substitute `<RELEASE_BRANCH>` in the title (e.g. `merge release/1.4.0 into next`).
+Substitute `<RELEASE_BRANCH>` in the title (e.g. `merge release/1.4.0 into next`). In a worktree, add `-w`/`-r` (see "bb in a worktree").
 
 Capture the PR id from the `bb pr create` output as `PR_ID`. If the output doesn't surface it cleanly, fall back to:
 
@@ -194,6 +218,21 @@ git branch -d merge-release
 
 Lowercase `-d` is correct: with `fast_forward` the merge commit on `next` is exactly the tip of `merge-release`, so the local branch is "merged" by git's reckoning and `-d` will succeed. If `-d` refuses, something unexpected happened — stop and investigate rather than escalating to `-D`.
 
+**In a worktree** (see "bb in a worktree"), `git checkout next` usually fails — the main repo has it checked out. Remove the worktree and clean up from the main repo instead:
+
+```bash
+git rev-parse --path-format=absolute --git-common-dir   # <MAIN> = parent dir of this
+git rev-parse --show-toplevel                           # <WORKTREE>
+cd <MAIN>                      # first — the session cwd is inside the worktree being removed
+git worktree remove <WORKTREE>
+git fetch --prune origin
+git pull --ff-only             # if next is checked out in <MAIN>
+git fetch origin next:next     # otherwise (fast-forward only)
+git branch -d merge-release
+```
+
+Never `git worktree remove --force`: if it refuses (modified or untracked files), stop and ask. If the `next` sync is refused (diverged, or checked out in yet another worktree), report it and leave it — don't force. If `-d` refuses because `<MAIN>` isn't on `next`, confirm with `git merge-base --is-ancestor merge-release origin/next`; if that succeeds, `-D` is safe, otherwise stop and investigate as above.
+
 Then briefly summarize for the user:
 - Release branch merged
 - Files that conflicted and how each was resolved (functionally)
@@ -205,7 +244,7 @@ Then briefly summarize for the user:
 - **Project uses a non-Bitbucket remote** — the `bb` CLI will fail. If the remote is GitHub/GitLab, stop and ask the user whether to use the equivalent CLI (`gh` / `glab`) — do not silently translate commands.
 - **No `next` branch exists** — stop and ask. Some projects use `develop` or `main` as the development line; the user must confirm the target.
 - **`bb pr merge --strategy fast_forward` not supported by the bb CLI version** — surface the error to the user. Do not silently substitute another strategy; the choice of strategy is part of the contract here.
-- **The release branch is already fully merged into `next`** — `git merge` will report "Already up to date." and produce no commit. In that case there is nothing to PR. Clean up: `git checkout next && git branch -D merge-release`, then tell the user nothing was merged because the release was already integrated.
+- **The release branch is already fully merged into `next`** — `git merge` will report "Already up to date." and produce no commit. In that case there is nothing to PR. Clean up: `git checkout next && git branch -D merge-release` (if `next` was busy in another worktree, `git checkout <ORIGINAL_REF>` instead), then tell the user nothing was merged because the release was already integrated.
 
 ## Reminders
 

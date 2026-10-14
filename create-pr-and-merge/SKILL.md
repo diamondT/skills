@@ -12,12 +12,13 @@ This skill opens a Bitbucket PR and then merges it once CI passes. It is a thin 
 
 Run the **`create-pr`** skill to commit, branch, push, and open the Bitbucket PR. Follow it exactly as written — do **not** reimplement any of the commit/branch/push/`bb pr create` logic here; that skill owns it.
 
-When `create-pr` finishes, capture four values you'll need downstream. Don't ask the user for these — they're all visible in what `create-pr` just did:
+When `create-pr` finishes, capture the values you'll need downstream. Don't ask the user for these — they're all visible in what `create-pr` just did:
 
-- **`PR_ID`** — the PR number from the `bb pr create` output. If the output doesn't surface it cleanly, fall back to `bb pr list -o json` and take the entry whose source branch is your feature branch (most recently created if several).
+- **`PR_ID`** — the PR number from the `bb pr create` output. If the output doesn't surface it cleanly, fall back to `bb pr list -o json` (with the same `-w`/`-r` as `bb pr create`, if it used them) and take the entry whose source branch is your feature branch (most recently created if several).
 - **`COMMIT_MESSAGE`** — the exact commit message `create-pr` produced and the user confirmed: subject, body if any. This whole thing is handed to `merge-pr` in step 2 to become the merge commit message, so keep it verbatim.
 - **`TARGET_BRANCH`** — the PR destination (the `--destination` passed to `bb pr create`, e.g. `main` or `next`). Needed for cleanup.
 - **`PR_BRANCH`** — the source feature branch (the `--source`). Needed for cleanup.
+- **`WORKSPACE`** / **`REPO_SLUG`** — only in a git worktree: the `-w`/`-r` values `create-pr` passed to `bb pr create`.
 
 If `create-pr` stopped without opening a PR (e.g. no changes to commit), there is nothing to merge — stop here and report why.
 
@@ -25,12 +26,13 @@ If `create-pr` stopped without opening a PR (e.g. no changes to commit), there i
 
 Run the **`merge-pr`** skill to wait for the PR build, merge once it's green, and clean up the local branch. Follow it exactly as written — do **not** reimplement any of the `bb pr builds`/`bb pr merge`/cleanup logic here; that skill owns it.
 
-`merge-pr` works standalone by discovering the PR's details, but you already captured everything it needs in step 1, so hand those four values straight across instead of making it re-derive them:
+`merge-pr` works standalone by discovering the PR's details, but you already captured everything it needs in step 1, so hand those values straight across instead of making it re-derive them:
 
 - **`PR_ID`** → the PR to merge.
 - **`COMMIT_MESSAGE`** → the merge commit message, **verbatim** — same subject, same body. This is the important hand-off: passing it through keeps the merge commit faithful to the commit, trailer (if any) and all, rather than letting it be reconstructed from the PR.
 - **`TARGET_BRANCH`** → the merge destination, for cleanup.
 - **`PR_BRANCH`** → the source feature branch, for cleanup.
+- **`WORKSPACE`** / **`REPO_SLUG`** → only in a worktree, for every `bb` call.
 
 `merge-pr` stops on a red or stuck build and asks rather than improvising; honour that — do **not** merge a PR whose build isn't green. When it finishes, it will have merged the PR and pruned the local branch, and reported the PR id, build result, and merge status.
 

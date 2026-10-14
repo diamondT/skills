@@ -15,10 +15,23 @@ The skill needs four values. When a caller delegates to this skill (e.g. `create
 
 - **`PR_ID`** — the PR number. If the user named one ("merge PR 73"), use it. If a caller passed it, use that. Otherwise run `bb pr list -o json` and pick the entry whose source branch is the current local branch (most recently created if several); if that's ambiguous, show the list and ask.
 - **`COMMIT_MESSAGE`** — the message the merge commit should carry: subject, optional body. If a caller passed the exact message its commit used, reuse it verbatim — that keeps the merge commit faithful to the work. Standalone, reconstruct it from the PR's source-branch HEAD commit (`git log -1 <PR_BRANCH>` once fetched, or the PR's commit list via `bb`), preserving the original subject, body.
-- **`TARGET_BRANCH`** — the PR destination (e.g. `main` or `next`). A caller passes the `--destination` it used; standalone, read it from `bb pr <PR_ID> -o json` (the destination branch). Needed for cleanup.
-- **`PR_BRANCH`** — the PR source (feature) branch. A caller passes the `--source`; standalone, read it from `bb pr <PR_ID> -o json`. Needed for cleanup.
+- **`TARGET_BRANCH`** — the PR destination (e.g. `main` or `next`). A caller passes the `--destination` it used; standalone, read it from `bb pr view <PR_ID> -o json` (the destination branch). Needed for cleanup.
+- **`PR_BRANCH`** — the PR source (feature) branch. A caller passes the `--source`; standalone, read it from `bb pr view <PR_ID> -o json`. Needed for cleanup.
+- **`WORKSPACE`** / **`REPO_SLUG`** — only in a worktree (see below). Use the caller's values if passed; standalone, derive them as described in "bb in a worktree".
 
 If there is no open PR to act on, there is nothing to merge — stop and report that.
+
+## bb in a worktree
+
+`bb` reads the Bitbucket workspace and repo from `./.git/config`. In a git worktree `.git` is a file, so `bb` fails with `missing required field: workspace`. Check:
+
+```bash
+git rev-parse --path-format=absolute --git-dir --git-common-dir
+```
+
+If the two lines differ, you're in a worktree. Derive `WORKSPACE` / `REPO_SLUG` from `git remote get-url origin`: drop a trailing `.git`, split on `/` and `:` — the last two segments are `<WORKSPACE>` and `<REPO_SLUG>` (e.g. `git@bitbucket.org:acme/shop.git` or `https://user@bitbucket.org/acme/shop` → `acme`, `shop`). Then add `-w <WORKSPACE> -r <REPO_SLUG>` after the subcommand on **every** `bb` call (`bb pr create -w acme -r shop …`) — they're subcommand options, not global ones. Write the literal values; shell variables don't persist between calls.
+
+Here that means `bb pr list`, `bb pr view`, `bb pr builds` and `bb pr merge`.
 
 ## Step 1 — Wait for the PR build
 
@@ -72,6 +85,21 @@ git branch -d <PR_BRANCH>
 ```
 
 `git fetch --prune` also drops the stale remote-tracking ref if Bitbucket deleted the remote branch on merge. `git branch -d` refuses to delete a branch git doesn't consider merged — and with a squash or merge-commit strategy git won't recognise `<PR_BRANCH>` as merged even though Bitbucket just merged it. In that case the PR merge we confirmed in step 2 is the source of truth, so `git branch -D <PR_BRANCH>` is safe. If `git pull --ff-only` fails because local `<TARGET_BRANCH>` diverged, **stop** and show the user — never `reset --hard` a shared branch without instruction.
+
+**In a worktree** (see "bb in a worktree"), `git checkout <TARGET_BRANCH>` usually fails — the main repo has it checked out. Remove the worktree and clean up from the main repo instead:
+
+```bash
+git rev-parse --path-format=absolute --git-common-dir   # <MAIN> = parent dir of this
+git rev-parse --show-toplevel                           # <WORKTREE>
+cd <MAIN>                      # first — the session cwd is inside the worktree being removed
+git worktree remove <WORKTREE>
+git fetch --prune origin
+git pull --ff-only             # if <TARGET_BRANCH> is checked out in <MAIN>
+git fetch origin <TARGET_BRANCH>:<TARGET_BRANCH>   # otherwise (fast-forward only)
+git branch -d <PR_BRANCH>
+```
+
+Never `git worktree remove --force`: if it refuses (modified or untracked files), stop and ask. If the `<TARGET_BRANCH>` sync is refused (diverged, or checked out in yet another worktree), report it and leave it — don't force. The `-d`/`-D` rule above applies unchanged.
 
 Cleanup only makes sense when `<PR_BRANCH>` exists locally (it always does when delegated mid-session right after `create-pr`). If you merged a PR that was never checked out locally, there's no local branch to prune — skip what doesn't apply and just sync `<TARGET_BRANCH>`.
 
