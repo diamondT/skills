@@ -27,6 +27,7 @@ title already exists, auth failures, an issue stuck before Done.
 | Jira comment | `deployed to prod on dd-mm-yyyy` — same date as the page title |
 | Jira workflow | `Ready for Production` → `Verification` → `Done` |
 | Email subject | `NextCommerce Production release` |
+| Email To | v.skaraki, p.panagakou, n.chytiris, m.melissianou `@publicnext.gr` (`TO` in the script) |
 | API token | `~/.config/atlassian/token` (scoped, `create:page`) |
 
 ## Setup
@@ -115,7 +116,7 @@ explorer.exe "$(wslpath -w "$W/hotfix-release.eml")"; true
 
 - There's no email tool, so the draft is an `.eml` with `X-Unsent: 1`. Outlook opens it as a new editable message. Never send anything.
 - `explorer.exe` returns exit code 1 even on success, so ignore it.
-- Leave `To:` blank. The user fills in recipients.
+- `To:` is prefilled from `TO` in the script.
 
 The body is fixed and was agreed with the user. Keep the lowercase "all," / "thanks,"
 exactly as below: the user corrected an attempt to capitalise them.
@@ -158,5 +159,5 @@ acli jira workitem search --jql "$JQL" --count   # expect 0
 Keep it short:
 - JQL used and issue count
 - Confluence page URL, plus confirmation that the parent bullet was added
-- `.eml` path and whether it was opened. Recipients are blank.
+- `.eml` path and whether it was opened.
 - Per issue: comment added and the status path to Done (or STUCK)

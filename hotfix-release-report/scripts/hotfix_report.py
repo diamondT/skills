@@ -8,6 +8,12 @@ import sys
 from email.message import EmailMessage
 
 SUBJECT = "NextCommerce Production release"
+TO = (
+    '"SKARAKI,VICKY" <v.skaraki@publicnext.gr>, '
+    '"PANAGAKOU, PANAGIOTA" <p.panagakou@publicnext.gr>, '
+    '"CHYTIRIS, NIKOS" <n.chytiris@publicnext.gr>, '
+    '"MELISSIANOU MARIA" <m.melissianou@publicnext.gr>'
+)
 HEADERS = ("Issue", "Issue Type", "Issue Description")
 CELL = 'style="border:1px solid #999;padding:4px 8px"'
 
@@ -99,7 +105,7 @@ def cmd_eml(a):
 </body></html>"""
     msg = EmailMessage()
     msg["Subject"] = SUBJECT
-    msg["To"] = ""
+    msg["To"] = TO
     msg["X-Unsent"] = "1"
     msg.set_content(text)
     msg.add_alternative(body, subtype="html")
