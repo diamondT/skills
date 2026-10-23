@@ -1,7 +1,6 @@
 ---
 name: create-pr-and-merge
 description: Create a Bitbucket PR, wait for green CI and merge.
-disable-model-invocation: true
 ---
 
 # Create a PR and merge it on green
