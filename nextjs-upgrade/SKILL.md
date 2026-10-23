@@ -1,6 +1,7 @@
 ---
 name: nextjs-upgrade
-description: Upgrade Next.js and React dependencies in a project. Use when user asks to upgrade Next.js, update Next.js version, or check for Next.js updates. Triggers on requests like "upgrade nextjs", "update next version", "check next updates", "bump nextjs". Also upgrades react, react-dom, @types/react, @types/react-dom.
+description: Upgrade Next.js and React dependencies in a project.
+disable-model-invocation: true
 ---
 
 # Next.js Upgrade

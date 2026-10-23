@@ -1,6 +1,7 @@
 ---
 name: upgrade-deps
-description: Upgrade all dependencies in package.json to their latest stable versions. Use when user asks to upgrade dependencies, update packages, bump versions, or check for outdated packages. Triggers on requests like "upgrade deps", "update dependencies", "bump packages", "upgrade all", "check outdated". Skips alpha, beta, rc, snapshot, canary, and other pre-release versions.
+description: Upgrade all dependencies in package.json.
+disable-model-invocation: true
 ---
 
 # Upgrade All Dependencies
