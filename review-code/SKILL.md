@@ -1,9 +1,5 @@
 ---
 name: review-code
-#context: fork
-#agent: general-purpose
-#model: opus
-#effort: xhigh
 description: "Review the changes since a fixed point (commit, branch, tag, or merge-base)"
 ---
 

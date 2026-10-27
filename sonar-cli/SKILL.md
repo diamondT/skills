@@ -1,13 +1,9 @@
 ---
 name: sonar-cli
 description: >
-  List SonarQube issues for a pull request (or project) using the `sonar` CLI
+  List SonarQube issues for a pull request using the `sonar` CLI
   (SonarSource/sonarqube-cli). Use whenever the user wants to see, check, or
-  review SonarQube / SonarCloud findings — e.g. "what does sonar say about PR 73",
-  "list sonar issues for ecomm-ui-payments", "check code quality issues on this
-  pull request", "any blockers from sonar on my PR", "sonar list issues". Trigger
-  even when the user names only the project and PR number without saying "sonar
-  list issues", as long as SonarQube/Sonar issues for a PR are clearly meant.
+  review SonarQube findings for a PR.
 ---
 
 # Listing SonarQube issues with the `sonar` CLI

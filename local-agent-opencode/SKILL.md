@@ -2,18 +2,7 @@
 name: local-agent-opencode
 description: >
   Plan a task thoroughly, then delegate its execution to an external agent harness
-  (opencode) running locally, instead of a regular built-in sub-agent. Writes a
-  detailed self-contained prompt from the plan, runs `opencode run` with a specific
-  model, waits for the result, and marks the task done only when the external agent
-  reports success. Use this skill whenever the user says "local agent",
-  "/local-agent", "delegate to opencode", "use opencode", "have the local model do
-  it", "offload this to an external agent", "run this through another harness", or
-  otherwise wants the actual implementation work performed by an external/local
-  agent while you do the planning and verification. Also triggers on
-  "/local-agent-opencode". Trigger even if the user does
-  not name the skill. Do NOT use for ordinary sub-agent work (use the Agent tool),
-  for Codex CLI delegation (use `local-agent-codex`), or when the user wants you
-  to implement the change yourself.
+  (opencode) running locally.
 ---
 
 # Delegate execution to a local external agent (opencode)
