@@ -1,12 +1,11 @@
 ---
 name: blast-radius
 description: Identify the blast radius of a change
-disable-model-invocation: true
 ---
 
 # Blast Radius
 
-Identify the potential ramifications of a change (e.g. a PR or a set of uncommitted changes). Classify the change as low risk (green), medium risk (yellow) and high risk (red) — backed by concrete evidence from the codebase, not just the diff.
+Identify the potential ramifications of a change (e.g. a PR or a set of uncommitted changes). Classify the change as low risk (green), medium risk (yellow) and high risk (red) — backed by concrete evidence from the codebase, not just the diff or the user input (e.g. if your input says "this is minor change" verify it first).
 
 Line count is a weak signal. A one-line change to a retry loop in the request path can be HIGH; a 2,000-line new isolated feature behind a flag can be LOW. Reason about *consequences*, not size.
 
