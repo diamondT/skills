@@ -26,7 +26,7 @@ Call the /review-code skill and pass the fixed point (origin/<target-branch>) an
 
 ## Step 3: Resolution
 
-Present the output of Step 3. Ask the user if they want to comment on the PR or fix any of the findings.
+Present the output of Step 2. Ask the user if they want to comment on the PR or fix any of the findings.
 
 ### Step 3.1: Add PR comments
 
