@@ -17,18 +17,33 @@ Spawn a subagent and /blast-radius the changes.
 
 ## 2. Review
 
-Spawn a subagent and /review-code your changes. Verify and validate findings, and fix if necessary.
+Spawn a subagent and /review-code your changes. Ask the subagent for a score out of 10. Count each full review pass as one round. Verify and validate findings, and fix if necessary. A fresh review after fixes starts a new round. 
 
-Once done with any fixes, decide whether to run a new review cycle. The decision should be based on the blast-radius
-output level:
+If you agree with the recommendations, make the changes and request a fresh
+review after. Continue this process until the review reaches a satisfactory score or if the max number of rounds is exhausted:
 
-| Output level | Review cycles to run |
-|--------------|----------------------|
-| LOW          | 1                    |
-| MEDIUM       | 2                    |
-| HIGH         | 3                    |
+| Output level | Minimum review score | Maximum rounds to run |
+|--------------|----------------------|-----------------------|
+| LOW          | 7/10                 | 2                     |
+| MEDIUM       | 8/10                 | 3                     |
+| HIGH         | 9/10                 | 5                     |
 
-One cycle means the one you just run, you can end the flow now.
+Show the results at the end:
 
-Two or three means restart the review cycle sequentially, wait for the review to finish, fix if necessary and start
-over. Run at most 3 review cycles, never run more.
+```markdown
+## Review Cycle
+
+Blast radius: MEDIUM
+
+Rounds: 2
+
+| Reviewer | Round 1 | Round 2 |
+| --- | --- | --- |
+| Claude Opus | 7/10 | 9/10 |
+```
+
+If the reviewer gives no score, write no score. Do not invent one.
+
+Do not let repeated reviews result in scope creep. It is your job to fight to
+keep scope limited.
+
