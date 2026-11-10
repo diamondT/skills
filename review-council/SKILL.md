@@ -21,6 +21,26 @@ Once they report back with the findings, spawn two subagents in parallel and ask
 
 Once all the voters vote, ignore findings that are unanimously dropped (both voters said no), keep findings that are unanimously upvoted (both voters said yes). For the rest of the findings that have split votes (one voter said yes but the other said no), evaluate the finding yourself and offer the tie-breaking vote that will decide to keep or drop the finding.
 
-Report the final findings. Gather all votes and pick the findings that have a majority vote (at least 2 out of 3, including yourself as the tie-breaker where needed). Report them to the user in the original format as reported by the reviewer and add the confidence as reported by the voters.
+Report the final findings. Gather all votes and pick the findings that have a majority vote (at least 2 out of 3, including yourself as the tie-breaker where needed). Report them to the user as reported by the reviewer and add the confidence as reported by the voters. Use the following template
+
+```
+## Review Findings
+
+### Critical
+1. [SHORT TITLE] — `path/to/File.java:42` (as reported by the reviewers)
+   **Confidence:** (as reported by the voters) 
+   **Problem:** What is wrong and why it matters. (as reported by the reviewers)
+   **Suggestion:** Concrete fix or direction. (as reported by the reviewers)
+
+### High
+2. ...
+
+### Medium
+3. ...
+
+### Low / Nitpick
+4. ...
+```
 
 Do not let findings result in scope creep. Fight alongside the voters to keep scope limited.
+
