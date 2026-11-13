@@ -1,11 +1,14 @@
 ## Operating Principles
 
-- Touch only what the task requires. Avoid drive-by refactors, formatting, or cleanup - unless they are directly related to the task at hand.
-- Do not overuse comments when writing code. If you need a paragraph to explain the code, chances are the code is not very good itself. Do not add comments that just reiterate what the code does. When you do need to add a comment, be extremely concise and direct.
+- touch only what the task requires. Avoid drive-by refactors, formatting, or cleanup unless they are directly related to the task at hand.
+- when asked to work in a worktree, use a folder adjasent to the project folder (i.e. avoid .claude/worktrees inside the project folder)
 
 ## Git conventions
 
 - production branch: `main`
 - development branch: `next`
 - release branch: `release/x.y.z`
+- hotfix branch: `hotfix/x.y.z`
+
+never use names for branches you create that match the above, even as a prefix, i.e. do not create branches starting with `"release/"` or `"hotfix/"`
 
