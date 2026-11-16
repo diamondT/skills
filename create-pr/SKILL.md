@@ -72,12 +72,13 @@ Present the commit message to the user with AskUserQuestion and ask for confirma
 After pushing, create the PR using the `bb` CLI:
 
 ```
-bb pr create --title "<SHORT_PR_DESCRIPTION>" --source <SOURCE_BRANCH> --destination <TARGET_BRANCH>
+bb pr create --title "<SHORT_PR_DESCRIPTION>" --source <SOURCE_BRANCH> --destination <TARGET_BRANCH> --description <DESCRIPTION>
 ```
 
 - **Title**: Use the commit message subject (the `<TICKET> - <short description>` part).
 - **Source**: The current feature branch.
 - **Destination**: If obvious from context (e.g. the branch was created from `main` or `next`), use that. Otherwise, ask the user which target branch to use via AskUserQuestion.
+- **Description**: use `pr` skill to prepare a description for the PR
 
 **bb in a worktree**: `bb` reads the Bitbucket workspace and repo from `./.git/config`. In a git worktree `.git` is a file, so `bb` fails with `missing required field: workspace`. Check with `git rev-parse --path-format=absolute --git-dir --git-common-dir` — if the two lines differ, you're in a worktree. Derive `WORKSPACE` / `REPO_SLUG` from `git remote get-url origin`: drop a trailing `.git`, split on `/` and `:` — the last two segments are `<WORKSPACE>` and `<REPO_SLUG>` (e.g. `git@bitbucket.org:acme/shop.git` or `https://user@bitbucket.org/acme/shop` → `acme`, `shop`). Then add `-w <WORKSPACE> -r <REPO_SLUG>` after the subcommand on **every** `bb` call (`bb pr create -w acme -r shop …`) — they're subcommand options, not global ones. Write the literal values; shell variables don't persist between calls.
 
