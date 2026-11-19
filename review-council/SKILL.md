@@ -15,7 +15,7 @@ reasoning about any of the changes.
 
 You have two groups of specialists under your command: reviewers and voters.
 
-First, spawn two subagents in parallel and `review-code` your changes. 
+First, spawn two subagents in parallel and `review-code` your changes. Ask the subagents for a score out of 10.
 
 Once they report back with the findings, spawn two subagents in parallel and ask them to vote on the reviewers' findings. The voters should not re-review the code, just offer their opinion on the first group's findings. Each voter should vote on each finding, either yes or no. The voter should *not* offer suggestions and/or try to identify additional findings, their work is to vote on existing findings only. The voters should not judge each finding solely based on the classification (critical/high/medium/etc) that the initial reviewer gave, but they should re-evaluate the criticality as well as the finding itself. Instruct the voters to downvote any findings that would result in scope creep.
 
@@ -25,6 +25,12 @@ Report the final findings. Gather all votes and pick the findings that have a ma
 
 ```
 ## Review Findings
+
+## Overall Scores
+|Reviewer   | Score     |
+------------------------|
+|Reviewer 1 | <SCORE 1> |
+|Reviewer 2 | <SCORE 2> |
 
 ### Critical
 1. [SHORT TITLE] — `path/to/File.java:42` (as reported by the reviewers)
