@@ -13,14 +13,16 @@ reasoning about any of the changes. Once a subagent returns with findings, you c
 
 ## 1. Identify blast radius
 
-Spawn a subagent and /blast-radius the changes.
+Spawn a subagent and `blast-radius` the changes.
 
 ## 2. Review
 
-Spawn a subagent and /review-code your changes. Ask the subagent for a score out of 10. Count each full review pass as one round. Verify and validate findings, and fix if necessary. A fresh review after fixes starts a new round. 
+Spawn two subagents, one Claude Opus and one Gemini 4 Neon (laungh Neon via `local-agent-pi`) and `review-code` your changes. If you cannot reach all providers, or a named member is unavailable, report it instead of substituting.
+
+Ask the subagents for a score out of 10. Count each full review pass as one round. Verify and validate findings, and fix if necessary. A fresh review after fixes starts a new round. 
 
 If you agree with the recommendations, make the changes and request a fresh
-review after. Continue this process until the review reaches a satisfactory score or if the max number of rounds is exhausted:
+review after. Continue this process until the review reaches a satisfactory score for all reviewers or if the max number of rounds is exhausted:
 
 | Output level | Minimum review score | Maximum rounds to run |
 |--------------|----------------------|-----------------------|
@@ -40,9 +42,10 @@ Rounds: 2
 | Reviewer | Round 1 | Round 2 |
 | --- | --- | --- |
 | Claude Opus | 7/10 | 9/10 |
+| Gemini 4 neon | 6/10 | 9/10 |
 ```
 
-If the reviewer gives no score, write no score. Do not invent one.
+If any of the reviewers gives no score, write no score. Do not invent one.
 
 Do not let repeated reviews result in scope creep. It is your job to fight to
 keep scope limited.
