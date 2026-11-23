@@ -1,7 +1,7 @@
 ---
 name: java-conventions
 description: >
-  Gemeric, composable Java coding and testing conventions (style, idioms, JaCoCo branch
+  Generic, composable Java coding and testing conventions (style, idioms, JaCoCo branch
   coverage). Use whenever you write, edit, refactor, review, or test `.java` files across
   all Java contexts. Triggers on any request to write or review Java code where context-specific 
   skills or instructions do not already cover style.
