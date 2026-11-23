@@ -17,11 +17,13 @@ You have two groups of specialists under your command: reviewers and voters.
 
 First, spawn two subagents in parallel, one Claude Opus and one Gemini 4 Neon (launch Neon, via pi ACP using `local-agent-pi` with a wrapper subagent) and `review-code` your changes. Ask the subagents for a score out of 10.
 
-Once they report back with the findings, spawn two subagents in parallel and ask them to vote on the reviewers' findings. The voters should not re-review the code, just offer their opinion on the first group's findings. Each voter should vote on each finding, either yes or no. The voter should *not* offer suggestions and/or try to identify additional findings, their work is to vote on existing findings only. The voters should not judge each finding solely based on the classification (critical/high/medium/etc) that the initial reviewer gave, but they should re-evaluate the criticality as well as the finding itself. Instruct the voters to downvote any findings that would result in scope creep.
+Once they report back with the findings, spawn one subagent and ask them to vote on the reviewers' findings. The voter should not re-review the code, just offer their opinion on the first group's findings. Voter should vote on each finding, either yes or no. The voter should *not* offer suggestions and/or try to identify additional findings, their work is to vote on existing findings only. Voter should not judge each finding solely based on the classification (critical/high/medium/etc) that the initial reviewer gave, but they should re-evaluate the criticality as well as the finding itself. Instruct the voter to downvote any findings that would result in scope creep.
 
-Once all the voters vote, ignore findings that are unanimously dropped (both voters said no), keep findings that are unanimously upvoted (both voters said yes). For the rest of the findings that have split votes (one voter said yes but the other said no), evaluate the finding yourself and offer the tie-breaking vote that will decide to keep or drop the finding.
+While waiting for the voter, vote on the findings yourself following the same principles.
 
-Report the final findings. Gather all votes and pick the findings that have a majority vote (at least 2 out of 3, including yourself as the tie-breaker where needed). Report them to the user as reported by the reviewer and add the confidence as reported by the voters. Use the following template
+Once the voter votes, ignore findings that are unanimously dropped (both you and the voter said no), keep findings that are unanimously upvoted (both you and the voter said yes). For the rest of the findings that have split votes, you are the tie-breaker, you will decide to keep or drop the finding.
+
+Report the final findings. Report them to the user as reported by the reviewer and add the confidence as reported by the voter. Use the following template
 
 ```
 ## Review Findings
@@ -34,7 +36,7 @@ Report the final findings. Gather all votes and pick the findings that have a ma
 
 ### Critical
 1. [SHORT TITLE] — `path/to/File.java:42` (as reported by the reviewers)
-   **Confidence:** (as reported by the voters) 
+   **Confidence:** (as reported by the voter) 
    **Problem:** What is wrong and why it matters. (as reported by the reviewers)
    **Suggestion:** Concrete fix or direction. (as reported by the reviewers)
 
