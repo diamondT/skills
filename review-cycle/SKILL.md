@@ -17,7 +17,7 @@ Spawn a subagent and `blast-radius` the changes.
 
 ## 2. Review
 
-Spawn two subagents, one Claude Opus and one Gemini 4 Neon (laungh Neon via `local-agent-pi`) and `review-code` your changes. If you cannot reach all providers, or a named member is unavailable, report it instead of substituting.
+Spawn two subagents, one Claude Opus and one Gemini 4 Neon (laungh Neon via `local-agent-pi` with a wrapper subagent) and `review-code` your changes. If you cannot reach all providers, or a named member is unavailable, report it instead of substituting.
 
 Ask the subagents for a score out of 10. Count each full review pass as one round. Verify and validate findings, and fix if necessary. A fresh review after fixes starts a new round. 
 
